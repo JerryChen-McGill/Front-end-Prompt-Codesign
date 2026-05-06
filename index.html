@@ -218,6 +218,26 @@
       color: var(--text-primary); background: var(--bg); outline: none; transition: border-color 0.15s;
     }
     .search-area input:focus { border-color: var(--primary); background: var(--surface); }
+    .upload-area { margin-top: 4px; }
+    .upload-dashed-box {
+      border: 2px dashed var(--border); border-radius: var(--radius-md);
+      padding: 24px 16px; text-align: center; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s; user-select: none;
+    }
+    .upload-dashed-box:hover { border-color: var(--primary); background: #F5F0FF; }
+    .upload-label { font-size: 13px; color: var(--text-secondary); margin-top: 8px; font-weight: 500; }
+    .upload-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .upload-success {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px; border-radius: var(--radius-md);
+      background: #F0FAF0; border: 1.5px solid #B7E2B7; font-size: 13px; color: var(--success);
+    }
+    .upload-success span { flex: 1; font-weight: 500; color: #2E7D32; }
+    .upload-remove-btn {
+      font-size: 11px; color: #C62828; background: none; border: none; cursor: pointer;
+      padding: 2px 6px; border-radius: 4px; font-family: inherit;
+    }
+    .upload-remove-btn:hover { background: #FFEBEE; }
 
     /* Add option row */
     .add-option-row { display: flex; gap: 6px; margin-top: 8px; }
@@ -523,6 +543,7 @@
       <button class="modal-type-btn active" data-type="multiple">Multiple Choice</button>
       <button class="modal-type-btn" data-type="text">Text Input</button>
       <button class="modal-type-btn" data-type="search">Search Match</button>
+      <button class="modal-type-btn" data-type="file">Upload File</button>
     </div>
     <div class="modal-actions">
       <button class="modal-cancel" id="modalCancel">Cancel</button>
@@ -574,7 +595,7 @@
     card.dataset.cid = containerId;
 
     var preview = getPreview(entry);
-    var typeLabel = { multiple: 'Choice', text: 'Text', search: 'Search' }[entry.type] || '';
+    var typeLabel = { multiple: 'Choice', text: 'Text', search: 'Search', file: 'File' }[entry.type] || '';
 
     card.innerHTML =
       '<div class="entry-header">' +
@@ -619,6 +640,24 @@
         label +
       '</div>' +
       '<div class="mc-grid"></div>';
+
+    } else if (entry.type === 'file') {
+      if (entry.uploaded) {
+        return '<div class="upload-area" data-cid="' + containerId + '">' +
+          '<div class="upload-success">' +
+            '<svg viewBox="0 0 24 24" width="28" height="28" fill="var(--success)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' +
+            '<span>File uploaded</span>' +
+            '<button class="upload-remove-btn" data-cid="' + containerId + '" data-idx="' + (appState.entries.indexOf(entry) !== -1 ? appState.entries.indexOf(entry) : appState.moreEntries.indexOf(entry)) + '">Remove</button>' +
+          '</div>' +
+        '</div>';
+      }
+      return '<div class="upload-area" data-cid="' + containerId + '">' +
+        '<div class="upload-dashed-box">' +
+          '<svg viewBox="0 0 24 24" width="32" height="32" fill="var(--text-muted)"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>' +
+          '<div class="upload-label">Click or drag file to upload</div>' +
+          '<div class="upload-hint">PDF, JPG, PNG up to 10MB</div>' +
+        '</div>' +
+      '</div>';
 
     } else {
       return '<div class="text-input-area">' +
@@ -920,6 +959,7 @@
       selected: [],
       text: '',
       searchText: '',
+      uploaded: false,
       open: false,
     };
     if (appState.modalTarget === 'more') {
@@ -978,6 +1018,37 @@
     _origRenderAll();
     if (appState.previewMode) updatePrompt();
   };
+
+  // ── Upload File (fake preview) ────────────────────────────────
+  mainContent.addEventListener('click', function(e) {
+    var uploadBox = e.target.closest('.upload-dashed-box');
+    if (!uploadBox) return;
+    var area = uploadBox.closest('.upload-area');
+    var cid = area.dataset.cid;
+    var card = area.closest('.entry-card');
+    var idx = parseInt(card.dataset.idx, 10);
+    var arr = cid === 'entriesContainer' ? appState.entries : appState.moreEntries;
+    if (!arr[idx].uploaded) {
+      arr[idx].uploaded = true;
+      area.innerHTML = '<div class="upload-success">' +
+        '<svg viewBox="0 0 24 24" width="28" height="28" fill="var(--success)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' +
+        '<span>File uploaded</span>' +
+        '<button class="upload-remove-btn" data-cid="' + cid + '" data-idx="' + idx + '">Remove</button>' +
+      '</div>';
+      if (appState.previewMode) updatePrompt();
+    }
+  });
+
+  mainContent.addEventListener('click', function(e) {
+    var removeBtn = e.target.closest('.upload-remove-btn');
+    if (!removeBtn) return;
+    var cid = removeBtn.dataset.cid;
+    var idx = parseInt(removeBtn.dataset.idx, 10);
+    var arr = cid === 'entriesContainer' ? appState.entries : appState.moreEntries;
+    arr[idx].uploaded = false;
+    arr[idx].open = true;
+    renderAll();
+  });
 
   // ── Generate Button ─────────────────────────────────────────
   document.getElementById('generateBtn').addEventListener('click', function() {
