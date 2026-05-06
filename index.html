@@ -610,19 +610,15 @@
         '</div>';
 
     } else if (entry.type === 'search') {
-      var q = (entry.searchText || '').toLowerCase().trim();
-      var matched = entry.options.filter(function(o) { return o.toLowerCase().includes(q); });
-      var label = q ? '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">' + matched.length + ' matched option' + (matched.length !== 1 ? 's' : '') + '</div>' : '';
-      var chipHtml = matched.map(function(opt) {
-        var sel = entry.selected.indexOf(opt) !== -1;
-        return '<div class="mc-chip' + (sel ? ' selected' : '') + '" data-cid="' + containerId + '" data-action="toggle-opt" data-value="' + escapeAttr(opt) + '">' + escapeHtml(opt) + '</div>';
-      }).join('');
-      var noMatch = matched.length === 0 && q ? '<span style="font-size:12px;color:var(--text-muted);">No matches</span>' : '';
+      var q = (entry.searchText || '').trim();
+      var label = q
+        ? '<div style="font-size:11px;color:var(--primary);margin-top:4px;font-weight:500;">' + escapeHtml(q) + ' matched options will show here</div>'
+        : '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Matched list will show here</div>';
       return '<div class="search-area">' +
         '<input type="text" placeholder="Search options..." value="' + escapeAttr(entry.searchText || '') + '" data-cid="' + containerId + '" data-action="search-input">' +
         label +
       '</div>' +
-      '<div class="mc-grid">' + chipHtml + noMatch + '</div>' +
+      '<div class="mc-grid"></div>' +
       '<div class="add-option-row">' +
         '<input type="text" placeholder="Add an option..." data-cid="' + containerId + '" data-action="add-opt-input">' +
         '<button data-cid="' + containerId + '" data-action="add-opt">Add</button>' +
@@ -775,7 +771,7 @@
       updatePrompt();
     });
 
-    // Search input
+    // Search input — just update the label, no full re-render
     mainContent.addEventListener('input', function(e) {
       if (e.target.dataset.action !== 'search-input') return;
       var card = e.target.closest('.entry-card');
@@ -783,7 +779,13 @@
       var cid = card.dataset.cid;
       var arr = cid === 'entriesContainer' ? appState.entries : appState.moreEntries;
       arr[idx].searchText = e.target.value;
-      renderAll();
+      var q = e.target.value.trim();
+      var label = card.querySelector('.search-area > div:last-child');
+      if (label) {
+        label.textContent = q ? q + ' matched options will show here' : 'Matched list will show here';
+        label.style.color = q ? 'var(--primary)' : 'var(--text-muted)';
+        label.style.fontWeight = q ? '500' : '400';
+      }
     });
 
     // Add option button
