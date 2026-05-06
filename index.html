@@ -857,10 +857,10 @@
     var addBtn = document.getElementById('addMoreBtn');
     if (appState.moreOpen) {
       container.style.display = '';
-      addBtn.style.display = '';
+      if (addBtn) addBtn.style.display = appState.previewMode ? 'none' : '';
     } else {
       container.style.display = 'none';
-      addBtn.style.display = 'none';
+      if (addBtn) addBtn.style.display = 'none';
     }
   });
 
@@ -994,11 +994,15 @@
     document.getElementById('mainContent').classList.toggle('preview-mode', on);
     document.getElementById('addMainBtn').style.display = on ? 'none' : '';
     document.getElementById('addMoreBtn').style.display = on ? 'none' : '';
-    document.getElementById('moreOptionsToggle').style.display = on ? 'none' : '';
+    // Show More Options toggle in preview, hide only the text label
+    document.getElementById('moreOptionsToggle').style.display = '';
     document.getElementById('promptTextarea').readOnly = !on;
 
     if (on) {
       // Enter preview: clear selections (empty questionnaire state), open all cards
+      appState.moreOpen = true;
+      document.getElementById('moreChevron').classList.add('down');
+      document.getElementById('moreEntriesContainer').style.display = '';
       var all = appState.entries.concat(appState.moreEntries);
       for (var i = 0; i < all.length; i++) {
         if (all[i]) {
