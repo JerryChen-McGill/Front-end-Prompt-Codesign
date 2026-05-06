@@ -377,6 +377,9 @@
     .preview-mode .entry-body.open { max-height: none; }
     .preview-mode .entry-body:not(.open) { max-height: none; }
     .preview-mode .prompt-body.open { max-height: none; }
+    .preview-mode #moreEntriesContainer { margin-top: 8px; }
+    .preview-mode .prompt-textarea { background: #FAFBFF; cursor: text; }
+    .preview-mode .prompt-textarea::placeholder { color: var(--text-muted); }
 
     .preview-section {
       background: var(--success-light); border: 1px solid #86EFAC;
@@ -949,68 +952,34 @@
     appState.previewMode = on;
     document.getElementById('editModeBtn').classList.toggle('active', !on);
     document.getElementById('previewModeBtn').classList.toggle('active', on);
+    document.getElementById('promptSection').style.display = on ? '' : 'none';
     document.getElementById('mainContent').classList.toggle('preview-mode', on);
-    renderPreview();
-  }
+    document.getElementById('addMainBtn').style.display = on ? 'none' : '';
+    document.getElementById('addMoreBtn').style.display = on ? 'none' : '';
+    document.getElementById('moreOptionsToggle').style.display = on ? 'none' : '';
+    document.getElementById('promptTextarea').readOnly = !on;
 
-  function renderPreview() {
-    var mainInner = document.getElementById('mainInner');
-    var existing = document.getElementById('previewContent');
-    if (existing) existing.parentNode.removeChild(existing);
-
-    if (!appState.previewMode) return;
-
-    var all = appState.entries.concat(appState.moreEntries);
-    var hasAny = all.some(function(e) {
-      return e && (
-        (e.selected && e.selected.length > 0) ||
-        (e.type === 'text' && e.text && e.text.trim())
-      );
-    });
-
-    var html = '<div id="previewContent">';
-    html += '<div class="preview-section visible">';
-    html += '<div class="preview-section-title">Configuration Summary</div>';
-
-    if (!hasAny) {
-      html += '<div class="preview-empty">No options selected yet. Switch to Edit mode to configure.</div>';
-    } else {
-      all.forEach(function(e) {
-        if (!e) return;
-        var hasSelection = (e.selected && e.selected.length > 0) || (e.type === 'text' && e.text && e.text.trim());
-        if (!hasSelection) return;
-
-        html += '<div class="preview-row">';
-        html += '<div class="preview-row-label">' + escapeHtml(e.name) + '</div>';
-
-        if (e.type === 'multiple' || e.type === 'search') {
-          html += '<div class="preview-row-chips">';
-          e.selected.forEach(function(s) {
-            html += '<span class="preview-chip">' + escapeHtml(s) + '</span>';
-          });
-          html += '</div>';
-        } else {
-          html += '<div class="preview-row-value">' + escapeHtml(e.text.trim()) + '</div>';
+    if (on) {
+      // Enter preview: clear selections (empty questionnaire state), open all cards
+      var all = appState.entries.concat(appState.moreEntries);
+      for (var i = 0; i < all.length; i++) {
+        if (all[i]) {
+          all[i].selected = [];
+          all[i].text = '';
+          all[i].open = true;
         }
-
-        html += '</div><hr class="preview-divider">';
-      });
+      }
     }
-
-    html += '</div></div>';
-
-    // Insert after subtitle
-    var subtitle = mainInner.querySelector('.page-subtitle');
-    if (subtitle && subtitle.nextSibling) {
-      mainInner.insertBefore(createDivFromHtml(html), subtitle.nextSibling);
-    }
+    renderAll();
+    if (on) updatePrompt();
   }
 
-  function createDivFromHtml(html) {
-    var wrapper = document.createElement('div');
-    wrapper.innerHTML = html;
-    return wrapper.firstChild;
-  }
+  // Hook renderAll so prompt updates live in preview mode
+  var _origRenderAll = renderAll;
+  renderAll = function() {
+    _origRenderAll();
+    if (appState.previewMode) updatePrompt();
+  };
 
   // ── Generate Button ─────────────────────────────────────────
   document.getElementById('generateBtn').addEventListener('click', function() {
