@@ -129,7 +129,6 @@
     .profile-form { padding: 12px 20px 16px; }
     .profile-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
     .profile-field:last-child { margin-bottom: 0; }
-    .profile-field label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
     .profile-field input {
       width: 100%; padding: 7px 10px; border: 1px solid var(--border);
       border-radius: var(--radius-sm); font-size: 13px; font-family: inherit;
@@ -360,6 +359,14 @@
       margin-bottom: 14px; transition: border-color 0.15s;
     }
     .modal-name-input:focus { border-color: var(--primary); background: var(--surface); }
+    .suggestion-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .suggestion-chip {
+      padding: 4px 10px; border-radius: 20px; font-size: 12px; font-family: inherit;
+      border: 1.5px solid var(--border); background: var(--surface); color: var(--text-secondary);
+      cursor: pointer; transition: all 0.15s; user-select: none;
+    }
+    .suggestion-chip:hover { border-color: var(--primary); color: var(--primary); background: #F5F0FF; }
+    .suggestion-chip:active { background: var(--primary); color: white; border-color: var(--primary); }
     .modal-type-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; display: block; }
     .modal-type-btns { display: flex; gap: 0; border: 1.5px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 18px; }
     .modal-type-btn {
@@ -458,10 +465,10 @@
         <button class="profile-dropdown-close" id="profileDropdownClose">&#x2715;</button>
       </div>
       <div class="profile-form">
-        <div class="profile-field"><label>Name</label><input type="text" id="profileName" placeholder="Your name" autocomplete="off"></div>
-        <div class="profile-field"><label>Email</label><input type="email" id="profileEmail" placeholder="your@email.com" autocomplete="off"></div>
-        <div class="profile-field"><label>Role</label><input type="text" id="profileRole" placeholder="e.g. Math Teacher" autocomplete="off"></div>
-        <div class="profile-field"><label>Notes</label><input type="text" id="profileNotes" placeholder="Additional notes..." autocomplete="off"></div>
+        <div class="profile-field"><input type="text" id="profileName" autocomplete="off"></div>
+        <div class="profile-field"><input type="text" id="profileEmail" autocomplete="off"></div>
+        <div class="profile-field"><input type="text" id="profileRole" autocomplete="off"></div>
+        <div class="profile-field"><input type="text" id="profileNotes" autocomplete="off"></div>
       </div>
     </div>
   </div>
@@ -538,6 +545,17 @@
     <div class="modal-title">New Entry</div>
     <label class="modal-label">Entry Name</label>
     <input class="modal-name-input" type="text" id="modalEntryName" placeholder="e.g. Topic, Grade Level, Difficulty..." autocomplete="off">
+    <div class="suggestion-chips" id="suggestionChips">
+      <span class="suggestion-chip" data-value="types of questions">types of questions</span>
+      <span class="suggestion-chip" data-value="topic">topic</span>
+      <span class="suggestion-chip" data-value="Format">Format</span>
+      <span class="suggestion-chip" data-value="example">example</span>
+      <span class="suggestion-chip" data-value="difficulty">difficulty</span>
+      <span class="suggestion-chip" data-value="additional request">additional request</span>
+      <span class="suggestion-chip" data-value="multiple problems">multiple problems</span>
+      <span class="suggestion-chip" data-value="worksheet">worksheet</span>
+      <span class="suggestion-chip" data-value="Course Standard">Course Standard</span>
+    </div>
     <label class="modal-type-label">Input Type</label>
     <div class="modal-type-btns" id="modalTypeBtns">
       <button class="modal-type-btn active" data-type="multiple">Multiple Choice</button>
@@ -924,6 +942,11 @@
   document.getElementById('modalCancel').addEventListener('click', closeModal);
   document.getElementById('addModal').addEventListener('click', function(e) {
     if (e.target === document.getElementById('addModal')) closeModal();
+    var chip = e.target.closest('.suggestion-chip');
+    if (chip) {
+      document.getElementById('modalEntryName').value = chip.dataset.value;
+      document.getElementById('modalEntryName').focus();
+    }
   });
 
   document.getElementById('modalEntryName').addEventListener('keydown', function(e) {
